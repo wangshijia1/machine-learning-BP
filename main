@@ -1,0 +1,102 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import random
+np.random.seed(2022)  # Numpy module.
+random.seed(2022)  # Python random module.
+
+
+#colab导入文件
+from google.colab import drive
+drive.mount('/content/drive')
+%cd /content/drive/My Drive 
+!ls    # 查看当前程序的根目录
+
+data=pd.read_table('./西瓜/watermelon30.txt',delimiter=',')
+del data['编号']
+
+
+def preprocess(data):
+    #1.将非数映射数字
+    for title in data.columns:
+        if data[title].dtype=='object':
+            encoder = LabelEncoder() #使用 0 和 n_classes-1 之间的值对目标标签进行编码。
+            data[title] = encoder.fit_transform(data[title]) #既包括了训练又包含了转换        
+    #2.去均值和方差归一化
+    ss = StandardScaler() #通过去除均值和缩放到单位方差来标准化特征。
+    X = data.drop('好瓜',axis=1)
+    Y = data['好瓜']
+    X = ss.fit_transform(X)
+    x,y = np.array(X),np.array(Y).reshape(Y.shape[0],1)
+    return x,y
+#定义Sigmoid,求导
+def sigmoid(x):
+    return 1/(1+np.exp(-x))
+def d_sigmoid(x):
+    return x*(1-x)
+    
+    
+##标准BP算法
+def standard_BP(x,y,dim=10,eta=0.2,max_iter=500): 
+    n_samples = 1
+    v = np.zeros((x.shape[1],dim))
+    gamma = np.zeros((n_samples,dim))
+    w = np.zeros((dim,1))
+    theta = np.zeros((n_samples,1))
+    losslist = []
+    for ite in range(max_iter):
+        loss_per_ite = []
+        for m in range(x.shape[0]):
+            xi,yi = x[m,:],y[m,:]
+            xi,yi = xi.reshape(1,xi.shape[0]),yi.reshape(1,yi.shape[0])
+            ##前向传播   
+            b = sigmoid(np.dot(xi,v)+gamma)
+            pre_y = sigmoid(np.dot(b,w)+theta)
+            loss = np.square(yi - pre_y)/2
+            loss_per_ite.append(loss)
+            #print('iter:%d  loss:%.4f'%(ite,loss))
+            ##反向传播
+            ##标准BP
+            g = pre_y*(yi-pre_y)*(1-pre_y)
+            g=g.reshape(1,g.size())
+            d_w = np.dot(np.transpose(b),g)
+            d_theta = g
+            e = b*(1-b)*g*w.T
+            xi=xi.reshape(1,xi.size())
+            d_v = np.dot(np.transpose(xi),e)
+            d_gamma = e
+            ##更新
+            v = v + eta*d_v
+            w = w + eta*d_w
+            gamma = gamma - eta*d_gamma
+            theta = theta - eta*d_theta   
+        losslist.append(np.mean(loss_per_ite))
+    # ##Loss可视化
+    # plt.figure()
+    # plt.plot([i+1 for i in range(max_iter)],losslist)
+    # plt.legend(['standard BP'])
+    # plt.xlabel('iteration')
+    # plt.ylabel('loss')
+    # plt.show()
+    return v,w,gamma,theta
+    
+    
+def main():
+    # data = pd.read_table('watermelon30.txt',delimiter=',')
+    # data.drop('编号',axis=1,inplace=True)
+    x,y = preprocess(data)
+    dim = 10
+    v,w,gamma,theta = standard_BP(x,y,dim)
+    #w1,w2,b1,b2 = accumulate_BP(x,y,dim)
+    #测试
+    b = sigmoid(np.dot(x,v)+gamma)
+    pre_y = sigmoid(np.dot(b,w)+theta)  
+    y_pred = np.round(pre_y)
+    result = pd.DataFrame(np.hstack((y,y_pred)),columns=['真值','预测'] )
+    print(result)     
+    #result.to_excel('result_numpy.xlsx',index=False)
+
+if __name__=='__main__':
+    main()
