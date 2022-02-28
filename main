@@ -82,7 +82,49 @@ def standard_BP(x,y,dim=10,eta=0.2,max_iter=500):
     # plt.show()
     return v,w,gamma,theta
     
-    
+
+# ##累积BP算法
+# def accumulate_BP(x,y,dim=10,eta=0.8,max_iter=500):
+#     n_samples = x.shape[0]
+#     w1 = np.zeros((x.shape[1],dim))
+#     b1 = np.zeros((n_samples,dim))
+#     w2 = np.zeros((dim,1))
+#     b2 = np.zeros((n_samples,1))
+#     losslist = []
+#     for ite in range(max_iter):
+#         ##前向传播   
+#         u1 = np.dot(x,w1)+b1
+#         out1 = sigmoid(u1)
+#         u2 = np.dot(out1,w2)+b2
+#         out2 = sigmoid(u2)
+#         loss = np.mean(np.square(y - out2))/2 #
+#         losslist.append(loss)
+#         print('iter:%d  loss:%.4f'%(ite,loss))
+#         ##反向传播
+#         ##标准BP
+#         d_out2 = -(y - out2)
+#         d_u2 = d_out2*d_sigmoid(out2)
+#         d_w2 = np.dot(np.transpose(out1),d_u2)
+#         d_b2 = d_u2
+#         d_out1 = np.dot(d_u2,np.transpose(w2))
+#         d_u1 = d_out1*d_sigmoid(out1)
+#         d_w1 = np.dot(np.transpose(x),d_u1)
+#         d_b1 = d_u1
+#         ##更新
+#         w1 = w1 - eta*d_w1
+#         w2 = w2 - eta*d_w2
+#         b1 = b1 - eta*d_b1
+#         b2 = b2 - eta*d_b2
+#     ##Loss可视化
+#     plt.figure()
+#     plt.plot([i+1 for i in range(max_iter)],losslist)
+#     plt.legend(['accumlated BP'])
+#     plt.xlabel('iteration')
+#     plt.ylabel('loss')
+#     plt.show()
+#     return w1,w2,b1,b2
+
+
 def main():
     # data = pd.read_table('watermelon30.txt',delimiter=',')
     # data.drop('编号',axis=1,inplace=True)
